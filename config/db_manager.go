@@ -23,12 +23,11 @@ func ConnectMaster() error {
 	// Depois de testar, reverta para os.Getenv("MYSQLUSER") e
 	// os.Getenv("MYSQLPASSWORD") e apague a senha em texto puro daqui.
 	// =========================================================================
-	user := "salao_app"
-	pass := "Rk!4568_Salao@2026"
-
-	host := os.Getenv("MYSQLHOST")
-	port := os.Getenv("MYSQLPORT")
-	dbName := os.Getenv("MYSQLDATABASE")
+	user := os.Getenv("MYSQLUSER")
+    pass := os.Getenv("MYSQLPASSWORD")
+    host := os.Getenv("MYSQLHOST")
+    port := os.Getenv("MYSQLPORT")
+    dbName := os.Getenv("MYSQLDATABASE")
 
 	// Logs de diagnóstico — não exibem a senha
 	log.Printf("🔧 MYSQLUSER: %s", user)
