@@ -27,7 +27,10 @@ type SelectBuilder struct {
 // NewSelect cria um novo SelectBuilder
 func NewSelect(table, alias string) *SelectBuilder {
 	if alias == "" {
-		alias = table
+		// Substitui crases e espaços para criar um alias seguro automaticamente
+		cleanAlias := strings.ReplaceAll(table, "`", "")
+		cleanAlias = strings.ReplaceAll(cleanAlias, " ", "_")
+		alias = cleanAlias
 	}
 	return &SelectBuilder{
 		Table:   table,
