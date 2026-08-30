@@ -139,7 +139,7 @@ type AdvancedSelectRequest struct {
 	OrderBy    string                 `json:"order_by,omitempty"`
 	Limit      int                    `json:"limit,omitempty"`
 	Offset     int                    `json:"offset,omitempty"`
-	UsePrefix  *int                   `json:"use_prefix"`
+	UsePrefix  *int                   `json:"use_prefix,omitempty"`
 }
 
 
