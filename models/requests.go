@@ -139,7 +139,10 @@ type AdvancedSelectRequest struct {
 	OrderBy    string                 `json:"order_by,omitempty"`
 	Limit      int                    `json:"limit,omitempty"`
 	Offset     int                    `json:"offset,omitempty"`
+	UsePrefix  *int                   `json:"use_prefix"`
 }
+
+
 
 // Join - Configuração de JOIN
 type Join struct {
