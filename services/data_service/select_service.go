@@ -18,16 +18,32 @@ func ExecuteAdvancedSelect(req models.AdvancedSelectRequest) ([]map[string]inter
 		return nil, err
 	}
 
-	// Obter código do projeto
-	projectCode, err := GetProjectCodeByID(req.ProjectID)
-	if err != nil {
-		return nil, err
+	// Regra invertida:
+	// Se req.UsePrefix for igual a 1, ignoramos o prefixo (usamos a tabela pura).
+	// Se for nil ou 0, aplicamos o BuildTableName normalmente (com prefixo).
+	ignorarPrefixo := false
+	if req.UsePrefix != nil && *req.UsePrefix == 1 {
+		ignorarPrefixo = true
 	}
 
-	// Construir nome físico da tabela
-	mainTable, err := BuildTableName(projectCode, req.Table)
-	if err != nil {
-		return nil, err
+	// Variável para a tabela principal
+	var mainTable string
+	var err error
+
+	if ignorarPrefixo {
+		mainTable = req.Table
+	} else {
+		// Obter código do projeto
+		projectCode, err := GetProjectCodeByID(req.ProjectID)
+		if err != nil {
+			return nil, err
+		}
+
+		// Construir nome físico da tabela com prefixo
+		mainTable, err = BuildTableName(projectCode, req.Table)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	mainAlias := req.Alias
@@ -43,11 +59,20 @@ func ExecuteAdvancedSelect(req models.AdvancedSelectRequest) ([]map[string]inter
 		builder.SetColumns(req.Select)
 	}
 
-	// Adicionar JOINs
+	// Adicionar JOINs respeitando a mesma regra
 	for _, j := range req.Joins {
-		joinTable, err := BuildTableName(projectCode, j.Table)
-		if err != nil {
-			return nil, err
+		var joinTable string
+		if ignorarPrefixo {
+			joinTable = j.Table
+		} else {
+			projectCode, err := GetProjectCodeByID(req.ProjectID)
+			if err != nil {
+				return nil, err
+			}
+			joinTable, err = BuildTableName(projectCode, j.Table)
+			if err != nil {
+				return nil, err
+			}
 		}
 		builder.AddJoin(j.Type, joinTable, j.Alias, j.On)
 	}
@@ -88,33 +113,12 @@ func ExecuteAdvancedSelect(req models.AdvancedSelectRequest) ([]map[string]inter
 		builder.SetLimitOffset(req.Limit, req.Offset)
 	}
 
-	// ============================================================================
-	// DEBUG SQL
-	// ============================================================================
-
 	sql := builder.Build()
 	values := builder.GetValues()
-
-	fmt.Println("======================================================")
-	fmt.Println("🟢 SQL GERADA")
-	fmt.Println(sql)
-	fmt.Println("------------------------------------------------------")
-	fmt.Printf("📦 Valores: %#v\n", values)
-	fmt.Println("======================================================")
 
 	// Executar query
 	rows, err := config.MasterDB.Query(sql, values...)
 	if err != nil {
-
-		fmt.Println("======================================================")
-		fmt.Println("🔴 ERRO AO EXECUTAR SQL")
-		fmt.Println(sql)
-		fmt.Println("------------------------------------------------------")
-		fmt.Printf("📦 Valores: %#v\n", values)
-		fmt.Println("------------------------------------------------------")
-		fmt.Println(err)
-		fmt.Println("======================================================")
-
 		return nil, fmt.Errorf("%w: %v", models.ErrQueryFailed, err)
 	}
 	defer rows.Close()
