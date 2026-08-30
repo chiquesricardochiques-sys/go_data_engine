@@ -77,8 +77,10 @@ func ExecuteAdvancedSelect(req models.AdvancedSelectRequest) ([]map[string]inter
 		builder.AddJoin(j.Type, joinTable, j.Alias, j.On)
 	}
 
-	// Filtro obrigatório: id_instancia
-	builder.AddWhere(fmt.Sprintf("%s.id_instancia = ?", mainAlias), req.InstanceID)
+	// Filtro obrigatório: id_instancia (só adiciona se NÃO for para ignorar o prefixo, ou conforme sua regra de negócio)
+	if !(req.UsePrefix != nil && *req.UsePrefix == 1) {
+		builder.AddWhere(fmt.Sprintf("%s.id_instancia = ?", mainAlias), req.InstanceID)
+	}
 
 	// Filtros simples (WHERE)
 	for k, v := range req.Where {
